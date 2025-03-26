@@ -122,6 +122,6 @@ private func write(_ str: String) {
     #if os(Windows)
         str.withCString { _ = _write(STDOUT_FILENO, $0, UInt32(strlen($0))) }
     #else
-        str.withCString { _ = write(STDOUT_FILENO, $0, UInt32(strlen($0))) }
+        str.withCString { _ = write(STDOUT_FILENO, $0, strlen($0)) }
     #endif
 }
