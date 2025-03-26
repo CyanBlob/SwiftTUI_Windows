@@ -13,8 +13,8 @@ class Renderer {
     /// printing.
     private var currentPosition: Position = .zero
 
-    private var currentForegroundColor: Color? = nil
-    private var currentBackgroundColor: Color? = nil
+    private var currentForegroundColor: Color?
+    private var currentBackgroundColor: Color?
 
     private var currentAttributes = CellAttributes()
 
@@ -67,22 +67,22 @@ class Renderer {
         }
         if cache[position.line.intValue][position.column.intValue] != cell {
             cache[position.line.intValue][position.column.intValue] = cell
-            if self.currentPosition != position {
+            if currentPosition != position {
                 write(EscapeSequence.moveTo(position))
-                self.currentPosition = position
+                currentPosition = position
             }
-            if self.currentForegroundColor != cell.foregroundColor {
+            if currentForegroundColor != cell.foregroundColor {
                 write(cell.foregroundColor.foregroundEscapeSequence)
-                self.currentForegroundColor = cell.foregroundColor
+                currentForegroundColor = cell.foregroundColor
             }
             let backgroundColor = cell.backgroundColor ?? .default
-            if self.currentBackgroundColor != backgroundColor {
+            if currentBackgroundColor != backgroundColor {
                 write(backgroundColor.backgroundEscapeSequence)
-                self.currentBackgroundColor = backgroundColor
+                currentBackgroundColor = backgroundColor
             }
-            self.updateAttributes(cell.attributes)
+            updateAttributes(cell.attributes)
             write(String(cell.char))
-            self.currentPosition.column += 1
+            currentPosition.column += 1
         }
     }
 
@@ -116,9 +116,12 @@ class Renderer {
         }
         currentAttributes = attributes
     }
-
 }
 
 private func write(_ str: String) {
-    str.withCString { _ = _write(STDOUT_FILENO, $0, UInt32(strlen($0))) }
+    #if os(Windows)
+        str.withCString { _ = _write(STDOUT_FILENO, $0, UInt32(strlen($0))) }
+    #else
+        str.withCString { _ = write(STDOUT_FILENO, $0, UInt32(strlen($0))) }
+    #endif
 }
